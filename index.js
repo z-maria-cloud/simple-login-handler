@@ -1,17 +1,12 @@
 import "dotenv/config";
-const { scryptSync } = await import("node:crypto");
+import escape from 'validator/lib/escape.js';
 
 // bcrypt init + basic test
 
 import bcrypt from "bcrypt";
 const saltRounds = 10;
-const myPlaintextPassword = "s0//P4$$w0rD";
-const someOtherPlaintextPassword = "not_bacon";
 
-const hash = bcrypt.hashSync(myPlaintextPassword, saltRounds);
-console.log(hash);
-console.log(bcrypt.compareSync(myPlaintextPassword, hash)); // true
-console.log(bcrypt.compareSync(someOtherPlaintextPassword, hash)); // false
+//console.log(bcrypt.compareSync(myPlaintextPassword, hash));
 
 // express init
 
@@ -50,11 +45,27 @@ app.get("/", (req, res) => {
 });
 
 app.post("/register", async (req, res) => {
-  // hash password, then store hash + user data to database
-  const hash = bcrypt.hashSync(myPlaintextPassword, saltRounds);
+  // hash password
+  const fullName = escape(req.body.name)
+  const userName = escape(req.body.username)
+  const hash = bcrypt.hashSync(req.body.password, saltRounds);
+
+  // check if username already exists in database
+  // if so, the username is already taken.
+  // the user must register again, choosing another username.
+
+  /*
+  let checkUsername = await dbQuery(
+    "SELECT * FROM data WHERE username = $1",
+    [userName]
+  );
+
+  console.log(checkUsername)
+  */
+
   let storeUser = await dbQuery(
     "INSERT INTO data (name, username, password) VALUES ($1, $2, $3)",
-    [req.body.name, req.body.username, hash]
+    [fullName, userName, hash]
   );
   res.send(
     "<p>Registration was successful. Try logging in now!</p><a href='/'>Go back to Homepage</a>"
