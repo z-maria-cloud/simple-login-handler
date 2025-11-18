@@ -39,9 +39,17 @@ app.use((req, res, next) => {
     let newCookie = cookieString()
     console.log(`no valid cookies have been found, delivering one (${newCookie}) right now. creating new session`)
     activeSessions[newCookie] = {loggedIn: false, userName: null}
+    req.cookies.id = newCookie
     res.cookie("id", newCookie)
   } else {
     // already has an id cookie, so dont give out a new one
+    if (Object.keys(activeSessions[req.cookies.id]).length > 1) {
+      // for some reason unknown to me,
+      // i noticed a weird "_locals: [Object: null prototype] {}" appearing in active session objects.
+      // i dont know what that is and why it appears, and i don't like it so im deleting it
+      console.log("→→→ WARNING: weird '_locals' thing identified, deleting it")
+      delete activeSessions[req.cookies.id]._locals
+    }
     console.log(req.cookies)
   }
   console.log("activeSessions:",activeSessions)
@@ -72,13 +80,7 @@ async function dbQuery(query, data) {
 }
 
 app.get("/", (req, res) => {
-  let resData = []
-  if (Object.keys(activeSessions).includes(req.cookies.id)) {
-    resData = activeSessions[req.cookies.id]
-  } else {
-    resData = {loggedIn: false, userName: null}
-  }
-  
+  let resData = activeSessions[req.cookies.id]
   res.render("home.ejs", resData);
 });
 
