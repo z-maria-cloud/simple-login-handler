@@ -2,11 +2,14 @@
 <html>
 <body>
 
+<% if (loggedIn) { %>
+<h2>Hello there, <%= userName %>!</h2>
+<a href="logout">Logout</a>
+<% } else { %>
 <h2>Register or Login</h2>
-
 <a href="new-user">Register</a><br>
 <a href="user-login">Login</a><br>
-<a href="logout">Logout</a>
+<% } %>
 
 </body>
 </html>

@@ -72,7 +72,14 @@ async function dbQuery(query, data) {
 }
 
 app.get("/", (req, res) => {
-  res.render("home.ejs");
+  let resData = []
+  if (Object.keys(activeSessions).includes(req.cookies.id)) {
+    resData = activeSessions[req.cookies.id]
+  } else {
+    resData = {loggedIn: false, userName: null}
+  }
+  
+  res.render("home.ejs", resData);
 });
 
 app.get("/logout", (req, res) => {
