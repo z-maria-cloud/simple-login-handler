@@ -1,12 +1,10 @@
 import "dotenv/config";
-import escape from 'validator/lib/escape.js';
+import escape from "validator/lib/escape.js";
 
 // bcrypt init + basic test
 
 import bcrypt from "bcrypt";
 const saltRounds = 10;
-
-//console.log(bcrypt.compareSync(myPlaintextPassword, hash));
 
 // express init
 
@@ -41,13 +39,21 @@ async function dbQuery(query, data) {
 }
 
 app.get("/", (req, res) => {
+  res.render("home.ejs");
+});
+
+app.get("/new-user", (req, res) => {
   res.render("register.ejs");
+});
+
+app.get("/user-login", (req, res) => {
+  res.render("login.ejs");
 });
 
 app.post("/register", async (req, res) => {
   // hash password
-  const fullName = escape(req.body.name)
-  const userName = escape(req.body.username)
+  const fullName = escape(req.body.name);
+  const userName = escape(req.body.username);
   const hash = bcrypt.hashSync(req.body.password, saltRounds);
   let sendString;
 
@@ -55,31 +61,52 @@ app.post("/register", async (req, res) => {
   // if so, the username is already taken.
   // the user must register again, choosing another username.
 
-  let checkUsername = await dbQuery(
-    "SELECT * FROM data WHERE username = $1",
-    [userName]
-  );
-  
-  let userAlreadyExists
+  let checkUsername = await dbQuery("SELECT * FROM data WHERE username = $1", [
+    userName,
+  ]);
+
+  let userAlreadyExists;
   if (checkUsername.length > 0) {
     // some rows were returned from database;
     // user already exists
-    sendString = "<p>This username was already taken. Please try again.</p><a href='/'>Go back to Homepage</a>"
-    userAlreadyExists = true
+    sendString =
+      "<p>This username was already taken. Please try again.</p><a href='/'>Go back to Homepage</a>";
+    userAlreadyExists = true;
   }
-  
+
   if (!userAlreadyExists) {
     // if user doesnt exist then we can store everything to database
     let storeUser = await dbQuery(
-    "INSERT INTO data (name, username, password) VALUES ($1, $2, $3)",
-    [fullName, userName, hash]
+      "INSERT INTO data (name, username, password) VALUES ($1, $2, $3)",
+      [fullName, userName, hash]
     );
-    sendString = "<p>Registration was successful. Try logging in now!</p><a href='/'>Go back to Homepage</a>"
+    sendString =
+      "<p>Registration was successful. Try logging in now!</p><a href='/'>Go back to Homepage</a>";
   }
 
-  res.send(
-    sendString
-  );
+  res.send(sendString);
+});
+
+app.post("/login", async (req, res) => {
+  const userName = escape(req.body.username);
+  const password = req.body.password;
+  let sendString = "Username or password was incorrect. Please try again.";
+
+  // check if password is correct for given username
+
+  let checkPassword = await dbQuery("SELECT * FROM data WHERE username = $1", [
+    userName,
+  ]);
+
+  // if checkPassword is empty, then no user with that username exists.
+
+  if (checkPassword.length > 0) {
+    if (bcrypt.compareSync(req.body.password, checkPassword[0].password)) {
+      sendString = "Success!";
+    }
+  }
+
+  res.send(sendString);
 });
 
 app.listen(port, () => {
