@@ -49,26 +49,36 @@ app.post("/register", async (req, res) => {
   const fullName = escape(req.body.name)
   const userName = escape(req.body.username)
   const hash = bcrypt.hashSync(req.body.password, saltRounds);
+  let sendString;
 
   // check if username already exists in database
   // if so, the username is already taken.
   // the user must register again, choosing another username.
 
-  /*
   let checkUsername = await dbQuery(
     "SELECT * FROM data WHERE username = $1",
     [userName]
   );
-
-  console.log(checkUsername)
-  */
-
-  let storeUser = await dbQuery(
+  
+  let userAlreadyExists
+  if (checkUsername.length > 0) {
+    // some rows were returned from database;
+    // user already exists
+    sendString = "<p>This username was already taken. Please try again.</p><a href='/'>Go back to Homepage</a>"
+    userAlreadyExists = true
+  }
+  
+  if (!userAlreadyExists) {
+    // if user doesnt exist then we can store everything to database
+    let storeUser = await dbQuery(
     "INSERT INTO data (name, username, password) VALUES ($1, $2, $3)",
     [fullName, userName, hash]
-  );
+    );
+    sendString = "<p>Registration was successful. Try logging in now!</p><a href='/'>Go back to Homepage</a>"
+  }
+
   res.send(
-    "<p>Registration was successful. Try logging in now!</p><a href='/'>Go back to Homepage</a>"
+    sendString
   );
 });
 
