@@ -3,7 +3,7 @@
 <body>
 
 <% if (loggedIn) { %>
-<h2>Hello there, <%= userName %>!</h2>
+<h2>Hello there, <%= userName %>! (<%= fullName %>)</h2>
 <a href="logout">Logout</a>
 <% } else { %>
 <h2>Register or Login</h2>

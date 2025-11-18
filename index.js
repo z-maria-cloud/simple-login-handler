@@ -79,8 +79,12 @@ async function dbQuery(query, data) {
   return result.rows;
 }
 
-app.get("/", (req, res) => {
-  let resData = activeSessions[req.cookies.id]
+app.get("/", async (req, res) => {
+  let resData = JSON.parse(JSON.stringify(activeSessions[req.cookies.id]))
+  if (resData.loggedIn) {
+    let completeUserData = await dbQuery("SELECT * FROM data WHERE username = $1", [resData.userName]);
+    resData.fullName = completeUserData[0].name
+  }
   res.render("home.ejs", resData);
 });
 
@@ -89,7 +93,7 @@ app.get("/logout", (req, res) => {
   delete activeSessions[currentCookie]
   res.clearCookie("id");
   console.log(`deleted active session for cookie: ${currentCookie}`)
-  res.send("<p>Successfully logged out.</p><a href='/'>Go back to Homepage</a>")
+  res.redirect("/")
 });
 
 app.get("/new-user", (req, res) => {
@@ -141,7 +145,7 @@ app.post("/login", async (req, res) => {
   const userName = escape(req.body.username);
   const password = req.body.password;
   const currentCookie = req.cookies.id
-  let sendString = "<p>Username or password was incorrect. Please try again.</p><a href='/'>Go back to Homepage</a>";
+  let resData = "<p>Username or password was incorrect. Please try again.</p><a href='/'>Go back to Homepage</a>"
 
   // check if password is correct for given username
 
@@ -150,18 +154,25 @@ app.post("/login", async (req, res) => {
   ]);
 
   // if checkPassword is empty, then no user with that username exists.
+  if (checkPassword.length == 0) {
+    console.log("no user was found")
+    res.send(resData)
+  }
 
   if (checkPassword.length > 0) {
     if (bcrypt.compareSync(password, checkPassword[0].password)) {
+      console.log("check successful")
       // if login is successful, then we have to assign "true"
       // to the current request's cookie's login status in the active sessions object
       // and set the correct username.
-      sendString = "<p>Login was successful!</p><a href='/'>Go back to Homepage</a>";
       activeSessions[currentCookie] = {loggedIn: true, userName: userName}
+      res.redirect("/")
+    } else {
+      // the passwords dont match
+      console.log("passwords did not match")
+      res.send(resData)
     }
   }
-
-  res.send(sendString);
 });
 
 app.listen(port, () => {
