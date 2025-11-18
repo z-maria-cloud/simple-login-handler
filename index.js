@@ -19,18 +19,29 @@ const app = express();
 const port = process.env.PROJECT_PORT;
 const appName = process.env.PROJECT_NAME;
 
+// this active sessions object will keep track of all the cookies that were distributed, along with that user's current status
+
+let activeSessions = {}
+
 app.use(cookieParser())
 
 app.use(express.urlencoded({ extended: true }));
 
+// custom middleware that handles cookie / sessions logic
+
 app.use((req, res, next) => {
   if (Object.keys(req.cookies).length == 0) {
-    req.hasCookies = false
-    console.log("no cookies have been found")
+    // if as no cookie then give a new one immediately
+    // also add newly created cookie to the active sessions object with status of "no login"
+    let newCookie = cookieString()
+    console.log(`no cookies have been found, delivering one (${newCookie}) rn`)
+    activeSessions[newCookie] = false
+    res.cookie("id", newCookie)
   } else {
-    req.hasCookies = true
+    // already has an id cookie, so dont give out a new one
     console.log(req.cookies)
   }
+  console.log(activeSessions)
   next()
 })
 
@@ -58,10 +69,6 @@ async function dbQuery(query, data) {
 }
 
 app.get("/", (req, res) => {
-  if (!req.hasCookies) {
-    console.log("delivering new cookie")
-    res.cookie("id", cookieString())
-  }
   res.render("home.ejs");
 });
 
