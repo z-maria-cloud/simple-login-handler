@@ -195,13 +195,10 @@ app.post("/edit-user", async (req, res) => {
 
   // handle name update
 
-  console.log("updating name");
   let updateFullName = await dbQuery(
     "UPDATE data SET name = $1 WHERE id = $2;",
     [fullName, userId]
   );
-
-  console.log(updateFullName);
 
   // handle username update
   // if the user wants to change the username, then we have to make sure that it is available to use
