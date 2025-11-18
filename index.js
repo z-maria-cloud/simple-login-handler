@@ -1,5 +1,10 @@
 import "dotenv/config";
 import escape from "validator/lib/escape.js";
+import crypto from "crypto";
+
+function cookieString() {
+  return crypto.randomBytes(16).toString("hex")
+}
 
 // bcrypt init + basic test
 
@@ -9,11 +14,25 @@ const saltRounds = 10;
 // express init
 
 import express from "express";
+import cookieParser from "cookie-parser";
 const app = express();
 const port = process.env.PROJECT_PORT;
 const appName = process.env.PROJECT_NAME;
 
+app.use(cookieParser())
+
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  if (Object.keys(req.cookies).length == 0) {
+    req.hasCookies = false
+    console.log("no cookies have been found")
+  } else {
+    req.hasCookies = true
+    console.log(req.cookies)
+  }
+  next()
+})
 
 // db connection init
 
@@ -39,7 +58,16 @@ async function dbQuery(query, data) {
 }
 
 app.get("/", (req, res) => {
+  if (!req.hasCookies) {
+    console.log("delivering new cookie")
+    res.cookie("id", cookieString())
+  }
   res.render("home.ejs");
+});
+
+app.get("/deletecookies", (req, res) => {
+  res.clearCookie("id");
+  res.send("id cookie was deleted")
 });
 
 app.get("/new-user", (req, res) => {
@@ -90,7 +118,7 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   const userName = escape(req.body.username);
   const password = req.body.password;
-  let sendString = "Username or password was incorrect. Please try again.";
+  let sendString = "<p>Username or password was incorrect. Please try again.</p><a href='/'>Go back to Homepage</a>";
 
   // check if password is correct for given username
 
@@ -102,7 +130,7 @@ app.post("/login", async (req, res) => {
 
   if (checkPassword.length > 0) {
     if (bcrypt.compareSync(req.body.password, checkPassword[0].password)) {
-      sendString = "Success!";
+      sendString = "<p>Login was successful!</p><a href='/'>Go back to Homepage</a>";
     }
   }
 
