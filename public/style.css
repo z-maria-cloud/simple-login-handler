@@ -1,0 +1,73 @@
+@import url("https://fonts.googleapis.com/css2?family=Stack+Sans+Headline:wght@200..700&display=swap");
+
+* {
+  font-family: "Stack Sans Headline", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-content: center;
+  justify-content: center;
+  height: 100vh;
+  align-items: center;
+}
+
+a,
+#submit {
+  text-decoration: none;
+  background-color: #276fcc;
+  color: white;
+  padding: 0.5rem 1rem;
+  border-radius: 100px;
+  margin: 0.5rem 0;
+  border: none;
+  width: fit-content;
+  font-size: 1rem;
+  cursor: grab;
+}
+
+a:hover,
+#submit:hover {
+  background-color: #68a0e8;
+}
+
+h2 {
+  margin: 2rem 0;
+  font-size: 3rem;
+  color: #000;
+}
+
+p {
+  color: #4a4a4a;
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+}
+
+.red {
+  color: red;
+}
+
+form {
+  width: 50%;
+}
+
+input {
+  width: 100%;
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: #4a4a4a;
+  padding: 5px;
+}
+
+label {
+  display: block;
+  width: fit-content;
+  margin: 10px 0;
+}
+
+.id-text {
+    color: #aeaeae;
+}

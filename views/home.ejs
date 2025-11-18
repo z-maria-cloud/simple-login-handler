@@ -1,29 +1,37 @@
 <!DOCTYPE html>
 <html>
+    <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Login Handler - Home</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
   <body>
     <% if (loggedIn) { %>
     <h2>Hello there, <%= userName %>! (<%= fullName %>)</h2>
+    
     <p>Do you want to edit your data?</p>
     <p class="red">If you change your data, you will be logged out.</p>
     <form action="edit-user" method="post">
-      <label for="userid">User ID:</label><br />
-      <input type="text" id="userid" name="userid" value="<%= userId %>" readonly="readonly"/><br />
-      <label for="name">Full Name:</label><br />
-      <input type="text" id="name" name="name" value="<%= fullName %>" /><br />
-      <label for="username">Username:</label><br />
+      <label for="userid">User ID:</label>
+      <input class="id-text" type="text" id="userid" name="userid" value="<%= userId %>" readonly="readonly"/>
+      <label for="name">Full Name:</label>
+      <input type="text" id="name" name="name" value="<%= fullName %>" />
+      <label for="username">Username:</label>
       <input
         type="text"
         id="username"
         name="username"
         value="<%= userName %>"
-      /><br /><br />
-      <input type="submit" value="Edit your data" />
+      />
+      <input id="submit" type="submit" value="Edit your data" />
+      <a href="logout">Logout</a>
     </form>
-    <a href="logout">Logout</a>
     <% } else { %>
     <h2>Register or Login</h2>
-    <a href="new-user">Register</a><br />
-    <a href="user-login">Login</a><br />
+    <a href="new-user">Register</a>
+    <a href="user-login">Login</a>
     <% } %>
   </body>
 </html>

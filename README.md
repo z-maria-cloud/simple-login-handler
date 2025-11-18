@@ -35,9 +35,9 @@ Download the files and then run `npm install`.
 
 Create a `.env` file containing `PROJECT_NAME` and `PROJECT_PORT` before using.
 
-Also make sure to create an SQL table somewhere. You will need to provide SQL access data in `.env`, by using `DB_USER` (database user username), `DB_PASSWORD` and `DB_NAME` (database name).
+Also make sure to create an SQL database somewhere. You will need to provide SQL access data in `.env`, by using `DB_USER` (database user username), `DB_PASSWORD` and `DB_NAME` (database name).
 
-The database's table must be named `data`, and must contain the following columns:
+The database's table **must** be named `data`, and must contain the following columns:
 - `name, varchar(80)`
 - `username, varchar(80)`
 - `password, varchar(1000)`
@@ -52,3 +52,9 @@ DB_USER="databaseuser"
 DB_PASSWORD="databasepassword"
 DB_NAME="logindatabase"
 ```
+
+## Usage
+
+Two npm scripts are available:
+- `npm run dev`
+- `npm run production` to enable EJS caching

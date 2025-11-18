@@ -23,8 +23,8 @@ const appName = process.env.PROJECT_NAME;
 
 let activeSessions = {};
 
+app.use(express.static('public'))
 app.use(cookieParser());
-
 app.use(express.urlencoded({ extended: true }));
 
 // custom middleware that handles cookie / sessions logic
@@ -135,7 +135,7 @@ app.post("/register", async (req, res) => {
     // some rows were returned from database;
     // user already exists
     sendString =
-      "<p>This username was already taken. Please try again.</p><a href='/'>Go back to Homepage</a>";
+      "This username was already taken. Please try again.";
     userAlreadyExists = true;
   }
 
@@ -146,10 +146,10 @@ app.post("/register", async (req, res) => {
       [fullName, userName, hash]
     );
     sendString =
-      "<p>Registration was successful. Try logging in now!</p><a href='/'>Go back to Homepage</a>";
+      "Registration was successful. Try logging in now!";
   }
 
-  res.send(sendString);
+  res.render("simple.ejs", {message: sendString});
 });
 
 app.post("/login", async (req, res) => {
@@ -157,7 +157,7 @@ app.post("/login", async (req, res) => {
   const password = req.body.password;
   const currentCookie = req.cookies.id;
   let resData =
-    "<p>Username or password was incorrect. Please try again.</p><a href='/'>Go back to Homepage</a>";
+    "Username or password was incorrect. Please try again.";
 
   // check if password is correct for given username
 
@@ -168,7 +168,7 @@ app.post("/login", async (req, res) => {
   // if checkPassword is empty, then no user with that username exists.
   if (checkPassword.length == 0) {
     console.log("no user was found");
-    res.send(resData);
+    res.render("simple.ejs", {message: resData});
   }
 
   if (checkPassword.length > 0) {
@@ -182,7 +182,7 @@ app.post("/login", async (req, res) => {
     } else {
       // the passwords dont match
       console.log("passwords did not match");
-      res.send(resData);
+      res.render("simple.ejs", {message: resData});
     }
   }
 });
@@ -237,9 +237,7 @@ app.post("/edit-user", async (req, res) => {
         checkPassword[0].id,
         userId
       );
-      res.send(
-        "<p>Username already taken. Please try again.</p><a href='/'>Go back to Homepage</a>"
-      );
+      res.render("simple.ejs", {message: "Username already taken. Please try again."});
     }
   }
 });
