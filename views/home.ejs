@@ -1,16 +1,29 @@
 <!DOCTYPE html>
 <html>
-<body>
-
-<% if (loggedIn) { %>
-<h2>Hello there, <%= userName %>! (<%= fullName %>)</h2>
-<a href="logout">Logout</a>
-<% } else { %>
-<h2>Register or Login</h2>
-<a href="new-user">Register</a><br>
-<a href="user-login">Login</a><br>
-<% } %>
-
-</body>
+  <body>
+    <% if (loggedIn) { %>
+    <h2>Hello there, <%= userName %>! (<%= fullName %>)</h2>
+    <p>Do you want to edit your data?</p>
+    <p class="red">If you change your data, you will be logged out.</p>
+    <form action="edit-user" method="post">
+      <label for="userid">User ID:</label><br />
+      <input type="text" id="userid" name="userid" value="<%= userId %>" readonly="readonly"/><br />
+      <label for="name">Full Name:</label><br />
+      <input type="text" id="name" name="name" value="<%= fullName %>" /><br />
+      <label for="username">Username:</label><br />
+      <input
+        type="text"
+        id="username"
+        name="username"
+        value="<%= userName %>"
+      /><br /><br />
+      <input type="submit" value="Edit your data" />
+    </form>
+    <a href="logout">Logout</a>
+    <% } else { %>
+    <h2>Register or Login</h2>
+    <a href="new-user">Register</a><br />
+    <a href="user-login">Login</a><br />
+    <% } %>
+  </body>
 </html>
-

@@ -3,7 +3,7 @@ import escape from "validator/lib/escape.js";
 import crypto from "crypto";
 
 function cookieString() {
-  return crypto.randomBytes(16).toString("hex")
+  return crypto.randomBytes(16).toString("hex");
 }
 
 // bcrypt init + basic test
@@ -21,40 +21,45 @@ const appName = process.env.PROJECT_NAME;
 
 // this active sessions object will keep track of all the cookies that were distributed, along with that user's current status
 
-let activeSessions = {}
+let activeSessions = {};
 
-app.use(cookieParser())
+app.use(cookieParser());
 
 app.use(express.urlencoded({ extended: true }));
 
 // custom middleware that handles cookie / sessions logic
 
 app.use((req, res, next) => {
-  if (Object.keys(req.cookies).length == 0 || !Object.keys(activeSessions).includes(req.cookies.id)) {
+  if (
+    Object.keys(req.cookies).length == 0 ||
+    !Object.keys(activeSessions).includes(req.cookies.id)
+  ) {
     // if:
     // - has no cookie
     // - has a cookie that's not listed in active sessions
     // then give a new one immediately
     // also add newly created cookie to the active sessions object with status of "no login"
-    let newCookie = cookieString()
-    console.log(`no valid cookies have been found, delivering one (${newCookie}) right now. creating new session`)
-    activeSessions[newCookie] = {loggedIn: false, userName: null}
-    req.cookies.id = newCookie
-    res.cookie("id", newCookie)
+    let newCookie = cookieString();
+    console.log(
+      `no valid cookies have been found, delivering one (${newCookie}) right now. creating new session`
+    );
+    activeSessions[newCookie] = { loggedIn: false, userName: null };
+    req.cookies.id = newCookie;
+    res.cookie("id", newCookie);
   } else {
     // already has an id cookie, so dont give out a new one
     if (Object.keys(activeSessions[req.cookies.id]).length > 1) {
       // for some reason unknown to me,
       // i noticed a weird "_locals: [Object: null prototype] {}" appearing in active session objects.
       // i dont know what that is and why it appears, and i don't like it so im deleting it
-      console.log("→→→ WARNING: weird '_locals' thing identified, deleting it")
-      delete activeSessions[req.cookies.id]._locals
+      console.log("→→→ WARNING: weird '_locals' thing identified, deleting it");
+      delete activeSessions[req.cookies.id]._locals;
     }
-    console.log(req.cookies)
+    console.log(req.cookies);
   }
-  console.log("activeSessions:",activeSessions)
-  next()
-})
+  console.log("activeSessions:", activeSessions);
+  next();
+});
 
 // db connection init
 
@@ -80,20 +85,26 @@ async function dbQuery(query, data) {
 }
 
 app.get("/", async (req, res) => {
-  let resData = JSON.parse(JSON.stringify(activeSessions[req.cookies.id]))
+  // if user is logged in then also provide full name and id
+  let resData = JSON.parse(JSON.stringify(activeSessions[req.cookies.id]));
   if (resData.loggedIn) {
-    let completeUserData = await dbQuery("SELECT * FROM data WHERE username = $1", [resData.userName]);
-    resData.fullName = completeUserData[0].name
+    let completeUserData = await dbQuery(
+      "SELECT * FROM data WHERE username = $1",
+      [resData.userName]
+    );
+    resData.fullName = completeUserData[0].name;
+    resData.userId = completeUserData[0].id;
   }
   res.render("home.ejs", resData);
 });
 
 app.get("/logout", (req, res) => {
-  let currentCookie = req.cookies.id
-  delete activeSessions[currentCookie]
+  // remove id cookie and delete active sessions entry
+  let currentCookie = req.cookies.id;
+  delete activeSessions[currentCookie];
   res.clearCookie("id");
-  console.log(`deleted active session for cookie: ${currentCookie}`)
-  res.redirect("/")
+  console.log(`deleted active session for cookie: ${currentCookie}`);
+  res.redirect("/");
 });
 
 app.get("/new-user", (req, res) => {
@@ -144,8 +155,9 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   const userName = escape(req.body.username);
   const password = req.body.password;
-  const currentCookie = req.cookies.id
-  let resData = "<p>Username or password was incorrect. Please try again.</p><a href='/'>Go back to Homepage</a>"
+  const currentCookie = req.cookies.id;
+  let resData =
+    "<p>Username or password was incorrect. Please try again.</p><a href='/'>Go back to Homepage</a>";
 
   // check if password is correct for given username
 
@@ -155,22 +167,82 @@ app.post("/login", async (req, res) => {
 
   // if checkPassword is empty, then no user with that username exists.
   if (checkPassword.length == 0) {
-    console.log("no user was found")
-    res.send(resData)
+    console.log("no user was found");
+    res.send(resData);
   }
 
   if (checkPassword.length > 0) {
     if (bcrypt.compareSync(password, checkPassword[0].password)) {
-      console.log("check successful")
+      console.log("check successful");
       // if login is successful, then we have to assign "true"
       // to the current request's cookie's login status in the active sessions object
       // and set the correct username.
-      activeSessions[currentCookie] = {loggedIn: true, userName: userName}
-      res.redirect("/")
+      activeSessions[currentCookie] = { loggedIn: true, userName: userName };
+      res.redirect("/");
     } else {
       // the passwords dont match
-      console.log("passwords did not match")
-      res.send(resData)
+      console.log("passwords did not match");
+      res.send(resData);
+    }
+  }
+});
+
+app.post("/edit-user", async (req, res) => {
+  console.log(req.body);
+  let userName = escape(req.body.username);
+  let fullName = escape(req.body.name);
+  let userId = req.body.userid;
+
+  // handle name update
+
+  console.log("updating name");
+  let updateFullName = await dbQuery(
+    "UPDATE data SET name = $1 WHERE id = $2;",
+    [fullName, userId]
+  );
+
+  console.log(updateFullName);
+
+  // handle username update
+  // if the user wants to change the username, then we have to make sure that it is available to use
+
+  let checkPassword = await dbQuery("SELECT * FROM data WHERE username = $1", [
+    userName,
+  ]);
+
+  if (checkPassword.length == 0) {
+    // if length is 0 then username is available to use
+    console.log("username is available to use");
+    let updateUsername = await dbQuery(
+      "UPDATE data SET username = $1 WHERE id = $2;",
+      [userName, userId]
+    );
+    res.redirect("/logout");
+  } else {
+    // username already exists. is it the same user that requested the change?
+    // check ids
+    if (checkPassword[0].id == userId) {
+      // the correct user wants to change the username.
+      console.log(
+        "the correct user wants to change username",
+        checkPassword[0].id,
+        userId
+      );
+      let updateUsername = await dbQuery(
+        "UPDATE data SET username = $1 WHERE id = $2;",
+        [userName, userId]
+      );
+      res.redirect("/logout");
+    } else {
+      // cannot set new username cos it was already taken.
+      console.log(
+        "the WRONG user wants to change username",
+        checkPassword[0].id,
+        userId
+      );
+      res.send(
+        "<p>Username already taken. Please try again.</p><a href='/'>Go back to Homepage</a>"
+      );
     }
   }
 });
